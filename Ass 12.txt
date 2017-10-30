@@ -1,0 +1,88 @@
+package javaapplication2;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
+import com.mongodb.DBObject;
+import com.mongodb.MapReduceCommand;
+import com.mongodb.MapReduceOutput;
+import com.mongodb.Mongo;
+
+public class JavaApplication2 {
+    public static void main(String[] args) 
+    {
+        Mongo mongo;
+        try 
+        {
+            mongo = new Mongo("localhost", 27017);
+            DB db = mongo.getDB("order");
+            
+            DBCollection orders = db.getCollection("data");
+            BasicDBObject data = new BasicDBObject();
+            
+            data.put("cust_id", 1020);
+            data.put("status", "A");
+            data.put("amount", 456);
+            orders.insert(data);
+            
+            data = new BasicDBObject();
+            data.put("cust_id", 1042);
+            data.put("status", "B");
+            data.put("amount", 1236);
+            orders.insert(data);
+            
+            data = new BasicDBObject();
+            data.put("cust_id", 1012);
+            data.put("status", "A");
+            data.put("amount", 5456);
+            orders.insert(data);
+            
+            data = new BasicDBObject();
+            data.put("cust_id", 1009);
+            data.put("status", "B");
+            data.put("amount", 1006);
+            orders.insert(data);
+            
+            data = new BasicDBObject();
+            data.put("cust_id", 1065);
+            data.put("status", "A");
+            data.put("amount", 4456);
+            orders.insert(data);
+            
+            String map = "function() { "+
+                         "var category; " +
+                         "if ( this.status == 'A'  ) "+
+                            "category = 'Bill Paid'; " +
+                         "else " +
+                            "category = 'Bill to be Paid'; "+
+                         "emit(category, {cust_id: this.cust_id});}";
+            
+            String reduce = "function(key, values) { " +
+                            "var sum = 0; " +
+                            "values.forEach(function(doc) { " +
+                            "sum += 1; "+
+                             "}); " +
+                                "return {orders: sum};} ";
+            
+            MapReduceCommand cmd = new MapReduceCommand(orders, map, reduce,
+
+            null, MapReduceCommand.OutputType.INLINE, null);
+            MapReduceOutput out = orders.mapReduce(cmd);
+            for (DBObject o : out.results())
+            {
+                 System.out.println(o.toString());
+            }
+
+        } 
+        catch (Exception e) 
+        {
+            e.printStackTrace();
+        }
+}
+}
+
+
+
+
+    
+
+
